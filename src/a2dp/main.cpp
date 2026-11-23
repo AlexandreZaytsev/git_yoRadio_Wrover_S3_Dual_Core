@@ -43,6 +43,13 @@ void connection_state_changed(esp_a2d_connection_state_t state, void*) {
     Serial.printf("[STATE ] %s\r\n", a2dp_sink.to_str(state));
 }
 
+
+// Колбэк громкости: телефон меняет уровень (0-127) по AVRCP
+void volume_changed(int vol) {
+    Serial.printf("[VOLUME] %d/127\r\n", vol);
+    // здесь позже будет дергаться энкодер/дисплей yoRadio
+}
+
 void setup() {
     Serial.begin(115200);
     delay(500);
@@ -64,6 +71,9 @@ void setup() {
         ESP_AVRC_MD_ATTR_ALBUM);
     a2dp_sink.set_avrc_metadata_callback(avrc_metadata_callback);
     a2dp_sink.set_on_connection_state_changed(connection_state_changed);
+
+//    a2dp_sink.set_avrc_rn_volumechanged_callback(volume_changed);
+    a2dp_sink.set_avrc_rn_volumechange(volume_changed);
 
     a2dp_sink.set_auto_reconnect(true, 20);   // до 20 попыток дозвона
     a2dp_sink.start("yoRadio_Wrover_Sink");
