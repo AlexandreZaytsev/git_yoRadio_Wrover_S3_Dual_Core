@@ -1,24 +1,19 @@
 // A2DP sink тест для ESP32-Wrover-Kit
-// Bluetooth-приёмник + вывод на I2S + метаданные AVRCP (в монитор)
-
 #include <Arduino.h>
 #include "AudioTools.h"
 #include "BluetoothA2DPSink.h"
 
-constexpr int I2S_BCK_PIN  = 26;   // BCK
-constexpr int I2S_WS_PIN   = 25;   // WS/LRC
-constexpr int I2S_DATA_PIN = 27;   // DOUT
+constexpr int I2S_BCK_PIN  = 26;
+constexpr int I2S_WS_PIN   = 25;
+constexpr int I2S_DATA_PIN = 27;
 
-// --- Хранилище метаданных ---
-// Сюда пишем последние принятые значения. Позже здесь же
-// будет забирать их дисплей yoRadio.
+I2SStream i2s;
+BluetoothA2DPSink a2dp_sink(i2s);   // ← объект объявлен ДО колбэков
+
 char md_title[64]   = "";
 char md_artist[64]  = "";
 char md_album[64]   = "";
 
-// --- Колбэк метаданных AVRCP ---
-// attribute_id: ESP_AVRC_MD_ATTR_TITLE / _ARTIST / _ALBUM / _PLAYING_TIME ...
-// value: строка UTF-8 (для PLAYING_TIME — длительность в мс строкой!)
 void avrc_metadata_callback(uint8_t attribute_id, const uint8_t* value) {
     const char* text = reinterpret_cast<const char*>(value);
     switch (attribute_id) {
@@ -43,8 +38,10 @@ void avrc_metadata_callback(uint8_t attribute_id, const uint8_t* value) {
     }
 }
 
-I2SStream i2s;
-BluetoothA2DPSink a2dp_sink(i2s);
+// Теперь a2dp_sink уже объявлен — ошибки не будет
+void connection_state_changed(esp_a2d_connection_state_t state, void*) {
+    Serial.printf("[STATE ] %s\r\n", a2dp_sink.to_str(state));
+}
 
 void setup() {
     Serial.begin(115200);
@@ -61,17 +58,22 @@ void setup() {
     i2s.begin(cfg);
     Serial.println("I2S TX started");
 
-    // Маска атрибутов: что просим у телефона.
-    // По умолчанию библиотека и так берёт самое важное,
-    // но зададим явно — чтобы точно получать исполнителя и альбом.
     a2dp_sink.set_avrc_metadata_attribute_mask(
         ESP_AVRC_MD_ATTR_TITLE |
         ESP_AVRC_MD_ATTR_ARTIST |
         ESP_AVRC_MD_ATTR_ALBUM);
     a2dp_sink.set_avrc_metadata_callback(avrc_metadata_callback);
+    a2dp_sink.set_on_connection_state_changed(connection_state_changed);
 
+    a2dp_sink.set_auto_reconnect(true, 20);   // до 20 попыток дозвона
     a2dp_sink.start("yoRadio_Wrover_Sink");
     Serial.println("A2DP sink started, waiting for phone...");
 }
 
 void loop() {}
+
+/*
+
+pio run -e a2dp_sink -t upload
+
+*/
