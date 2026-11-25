@@ -3,9 +3,14 @@
 #include "AudioTools.h"
 #include "BluetoothA2DPSink.h"
 
+
 constexpr int I2S_BCK_PIN  = 26;
 constexpr int I2S_WS_PIN   = 25;
 constexpr int I2S_DATA_PIN = 27;
+
+
+
+
 
 I2SStream i2s;
 BluetoothA2DPSink a2dp_sink(i2s);   // ← объект объявлен ДО колбэков

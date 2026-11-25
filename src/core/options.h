@@ -16,17 +16,13 @@ STORE YOUR SETTINGS IN THE *** myoptions.h *** FILE.
 */
 
 
-#ifdef ENV_ESP32_S3_KIT
-    #if __has_include("myoptions_s3.h")
-        #include "myoptions_s3.h"
+#ifdef ENV_MASTER_I2S_S3
+    #if __has_include("options_master_s3.h")
+        #include "options_master_s3.h"
     #endif
-#elif defined(ENV_ESP32_S3_DEVKITC_1_ALT)
-    #if __has_include("myoptions_s3_alt.h")
-        #include "myoptions_s3_alt.h"
-    #endif
-#elif defined(ENV_ESP32_WROVER_KIT)
-    #if __has_include("myoptions_wrover.h")
-        #include "myoptions_wrover.h"
+#elif defined(ENV_SLAVE_I2S_WROVER)
+    #if __has_include("options_slave_wrover.h")
+        #include "options_slave_wrover.h"
     #endif
 #else
     #error "Не выбрано поддерживаемое окружение (esp32-s3-kit или esp32-wrover-kit)"
