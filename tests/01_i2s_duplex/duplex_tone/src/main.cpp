@@ -4,7 +4,7 @@
 #define I2S_BCLK 38
 #define I2S_LRC  39
 #define I2S_DOUT 47
-#define I2S_DIN  8 //17
+#define I2S_DIN  8    // резерв был 17, ныне UART TX.
 
 I2SClass i2s;
 
@@ -16,7 +16,7 @@ const int      CHUNK = 256;
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.println("[FULLDUP] init i2s (TX=47, RX=8 на GND)...");
+  Serial.println("[FULLDUP] init i2s (TX=47, RX=8 на Wrover IO23)...");
   i2s.setPins(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_DIN, -1);
   if (!i2s.begin(I2S_MODE_STD, SAMPLE_RATE,
                  I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO)) {
@@ -27,32 +27,23 @@ void setup() {
 }
 
 void loop() {
-  // --- TX: тот же синус ---
-  static int16_t txbuf[2 * CHUNK];
-  static double phase = 0.0;
-  const double dphase = 2.0 * PI * FREQ / SAMPLE_RATE;
-  for (int i = 0; i < CHUNK; i++) {
-    int16_t s = (int16_t)(AMP * sin(phase));
-    phase += dphase;
-    txbuf[2 * i]     = s;
-    txbuf[2 * i + 1] = s;
-  }
-  i2s.write((uint8_t*)txbuf, sizeof(txbuf));
-
-  // --- RX: считаем и нули ---
-  static uint8_t rxBuf[512];
+  static uint8_t rxBuf[512];          // 128 стерео-кадров
   static uint32_t total = 0, nonzero = 0;
+
   size_t n = i2s.readBytes((char*)rxBuf, sizeof(rxBuf));
-  total += n;
-  for (size_t i = 0; i < n; i++)
-    if (rxBuf[i] != 0) nonzero++;
+  if (n > 0) {
+    i2s.write(rxBuf, n);              // ← принятое сразу в звук
+    total += n;
+    for (size_t i = 0; i < n; i++)
+      if (rxBuf[i] != 0) nonzero++;
+  }
 
   static uint32_t last = 0;
   if (millis() - last > 2000) {
     last = millis();
-    Serial.printf("[FULLDUP] RX: %u байт, ненулевых: %u %s\n",
+    Serial.printf("[FULLDUP] RX->TX: %u байт, ненулевых: %u %s\n",
                   (unsigned)total, (unsigned)nonzero,
-                  nonzero == 0 ? "(все нули — линия чиста)" : "(есть данные!)");
-    nonzero = 0;
+                  nonzero == 0 ? "(все нули)" : "(есть данные!)");
+    total = 0; nonzero = 0;
   }
 }
