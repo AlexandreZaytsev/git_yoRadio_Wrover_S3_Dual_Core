@@ -53,11 +53,14 @@ DISPOFF = белый, не чёрный на вашей панели — зна�
 #define TFT_DC              9    //A0
 #define BRIGHTNESS_PIN      14   //LED
 
-/* ----------FULL DUPLEX I2S DAC ---------- */
-#define I2S_DOUT            47
-#define I2S_BCLK            38
-#define I2S_LRC             39
-#define I2S_DIN             8    //полный дуплекс  вход потока от Wrover (BT), резерв — GPIO17 (был 17)
+/* ---------- I2S №1: дуплекс, S3 — мастер / WROVER -слейв / DAC - слейв ----------
+   Такты:   BCLK S3(38) → Wrover(26), DAC;  LRCLK S3(39) → Wrover(25), DAC
+   Данные:  DOUT S3(47) → DAC PCM5102  ·  DIN S3(8) ← Wrover(23), BT-поток (резерв GPIO17)
+*/
+#define I2S_BCLK            38  // → BCLK шины (источник такта — S3) → Wrover(26), DAC  
+#define I2S_LRC             39  // → LRCLK шины (источник — S3) → Wrover(25), DAC
+#define I2S_DOUT            47  // → DOUT - ЦАП DAC PCM5102 (воспроизведение)
+#define I2S_DIN             8   // ← DOUT Wrover (23), приём BT-потока        
 
 /* ---------- VS1053 — отключён (255) ---------- */
 #define VS1053_CS           255
@@ -145,7 +148,13 @@ DISPOFF = белый, не чёрный на вашей панели — зна�
 //#define I2S_RX_DEBUG        1    // 1 = фоновая задача читает RX и пишет счётчик; после проверки — 0
 
 
-#define TX_MASTER_TO_SLAVE_RX 17
-#define RX_MASTER_TO_SLAVE_TX 18
+
+/* ---------- UART1: командный канал S3 ↔ Wrover ----------
+   Кросс-соединение (TX одного → RX другого):
+     S3 TX(17) → Wrover RX(33)
+     S3 RX(18) ← Wrover TX(32)
+   Скорость и протокол — по договорённости с прошивкой слейва. */
+#define UART_TO_SLAVE_TX    17   // TX1: команды S3 → Wrover (его RX, GPIO33)
+#define UART_FROM_SLAVE_RX  18   // RX1: ответы Wrover → S3 (его TX, GPIO32)
 
 #endif
