@@ -570,3 +570,20 @@ git checkout -- src/a2dp/main_slave.cpp
 `UART_TO_SLAVE_TX` / `UART_FROM_SLAVE_RX` (S3),
 `UART_FROM_MASTER_RX` / `UART_TO_MASTER_TX` (Wrover).
 
+## Dual Core: S3 (мастер I2S) + Wrover (слейв I2S, Bluetooth-приём)
+
+Журнал этапов — в отчёте `Report_on_stage_1_5 I2S_duplex_BT.docx` (продолжение 
+`Report_on_stage_1_4 I2S_duplex_(pivot_table).docx`).
+
+- **Этап 1** — full-duplex I2S на S3 подтверждён изолированным тестом (`tests/01_i2s_duplex/duplex_tone`)
+- **Этап 2** — дуплекс интегрирован в основную прошивку ёРадио (ветка `i2s-duplex`)
+- **Этап 3** — RX-дебаг-счётчик в боевой прошивке: 882 688 байт/5 с, пин входа подтверждён
+- **Этап 4** — Wrover в роли I2S-слейва-TX: живой поток под тактами S3 (`src/a2dp/main_slave.cpp`, среда `slave_i2s_wrover`)
+- **Этап 5** — Bluetooth: телефон → A2DP (Wrover) → ring buffer → I2S slave TX → S3 → колонки 
+  (`src/a2dp/main_slave_a2dp.cpp`, среда `a2dp_slave_wrover`)
+
+Ключевые грабли этапа 5:
+- краш `I2SDriverESP32V1::onSentCb` при записи в I2S из BT-задачи → I2S пишет только `loop()`, BT наполняет FreeRTOS ring buffer (64 КБ);
+- `E BOD` при старте BT-радио → питание: короткий кабель, прямой порт материнки, второй USB Wrover-Kit;
+- заливка Wrover — только `upload_speed = 115200`;
+- остаточный шелест на фоне звука = рассинхрон кварцев (унаследован от этапа 4); лечение — ресинк через UART-канал S3↔Wrover (GPIO32/33 ↔ 17/18) — следующий этап.
