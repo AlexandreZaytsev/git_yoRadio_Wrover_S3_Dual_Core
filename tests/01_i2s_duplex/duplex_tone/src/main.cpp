@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include "driver/i2s.h"
+#include "options_master_s3.h"
+// I2S_BCLK=38, I2S_LRC=39, I2S_DOUT=47 (->ЦАП), I2S_DIN=8 (<-Wrover 23)
 
-// S3 мастер: TX=47->DAC, RX=8<-Wrover(23), такты 38/39 всем
-#define BCLK 38
-#define LRC  39
-#define DOUT 47
-#define DIN  8
+// S3 — I2S мастер: такты 38/39 раздаёт на Wrover(26/25) и ЦАП,
+// TX=I2S_DOUT -> ЦАП, RX=I2S_DIN <- Wrover(23). Реле RX->TX + статистика L/R.
+
 #define I2S_PORT I2S_NUM_0
 
 const uint32_t SAMPLE_RATE = 44100;
@@ -13,7 +13,8 @@ const uint32_t SAMPLE_RATE = 44100;
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.println("[FULLDUP] init legacy: TX=47->DAC, RX=8<-Wrover, MCLK 38/39");
+  Serial.printf("[FULLDUP] init legacy: TX=%d->DAC, RX=%d<-Wrover, такты %d/%d\n",
+                I2S_DOUT, I2S_DIN, I2S_BCLK, I2S_LRC);
 
   i2s_config_t cfg = {};
   cfg.mode                 = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_RX);
@@ -22,7 +23,7 @@ void setup() {
   cfg.channel_format       = I2S_CHANNEL_FMT_RIGHT_LEFT;
   cfg.communication_format = I2S_COMM_FORMAT_STAND_I2S;
   cfg.intr_alloc_flags     = ESP_INTR_FLAG_LEVEL1;
-  cfg.dma_buf_count        = 16;      // как на слейве: ~46 мс запаса
+  cfg.dma_buf_count        = 16;
   cfg.dma_buf_len          = 128;
   cfg.use_apll             = false;
   cfg.tx_desc_auto_clear   = true;
@@ -34,10 +35,10 @@ void setup() {
   }
   i2s_pin_config_t pins = {};
   pins.mck_io_num   = I2S_PIN_NO_CHANGE;
-  pins.bck_io_num   = BCLK;
-  pins.ws_io_num    = LRC;
-  pins.data_out_num = DOUT;
-  pins.data_in_num  = DIN;
+  pins.bck_io_num   = I2S_BCLK;
+  pins.ws_io_num    = I2S_LRC;
+  pins.data_out_num = I2S_DOUT;
+  pins.data_in_num  = I2S_DIN;
   if (i2s_set_pin(I2S_PORT, &pins) != ESP_OK) {
     Serial.println("[FULLDUP] set_pin FAILED");
     while (true) delay(1000);
