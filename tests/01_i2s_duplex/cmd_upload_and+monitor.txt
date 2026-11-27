@@ -1,0 +1,31 @@
+D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\
+  tests\
+    01_i2s_duplex\
+      duplex_tone\          ← S3-мастер (есть)
+      wrover_siren_slave\   ← новый (создаём)
+    02_wrover_master_dac\   ← сирена на ЦАП (есть, закоммичена)
+
+/* 
+S3 ведуший тактирует и переключает канал I2S с Wrover и DAC
+Данные передвет Wrower на S3 и S3 на ЦАП   
+
+S3 как I2S Master-RX
+ S3 pin 38 -> Wrover pi 26 (линия BCLK) + DAC pin BCLK  
+ S3 pin 39 -> Wrover pi 25 (линия LCK/LCR) + DAC pin LCK/LCR
+ S3 pin 47 -> DAC pin DIN
+
+Wrover как I2S Slave-TX 
+ Wrover 23 -> S3 pin 8 (RX)
+*/
+
+Шаг 1. Заливка S3-мастера (duplex_tone)
+powershell
+
+cd D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\01_i2s_duplex\duplex_tone
+pio run -t upload -t monitor
+
+Шаг 2. Заливка Wrover-слейва (wrover_siren_slave)
+powershell
+
+cd D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\01_i2s_duplex\wrover_siren_slave
+pio run -t upload -t monitor
