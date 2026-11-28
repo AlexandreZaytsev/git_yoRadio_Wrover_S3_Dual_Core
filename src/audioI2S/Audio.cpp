@@ -188,9 +188,10 @@ Audio::Audio(bool internalDAC /* = false */, uint8_t channelEnabled /* = I2S_DAC
     m_i2s_config.dma_desc_num        = psramInit()?16:DMA_BUFCOUNT;
 #endif
     m_i2s_config.dma_frame_num          = psramInit()?512:DMA_BUFLEN;
-    m_i2s_config.use_apll             = APLL_DISABLE; // must be disabled in V2.0.1-RC1
+    m_i2s_config.use_apll             = APLL_ENABLE;  // этап 7/8: точный аудио-клок от APLL (дрейф 2100->80 ppm)
     m_i2s_config.tx_desc_auto_clear   = true;   // new in V1.0.1
-    m_i2s_config.fixed_mclk           = I2S_PIN_NO_CHANGE;
+    m_i2s_config.mclk_multiple        = I2S_MCLK_MULTIPLE_256;  // MCLK = 256*fs ровно
+    m_i2s_config.fixed_mclk           = 0;      // 0 = драйвер сам подберёт точный делитель APLL
 
 
     if (internalDAC)  {
