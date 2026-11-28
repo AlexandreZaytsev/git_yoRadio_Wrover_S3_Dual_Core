@@ -174,6 +174,8 @@ struct Audio;
 
 class Audio : private AudioBuffer{
 
+friend class Player;   // этап 8, шаг 2: BT-источнику нужен доступ к playSample/setSampleRate
+
     AudioBuffer InBuff; // instance of input buffer
 
 public:

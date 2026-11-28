@@ -6,6 +6,8 @@
 #include "sdmanager.h"
 
 #include "audioroute.h"
+#include "btsource.h"
+
 #include "network.h"
 
 #include "netserver.h"
@@ -128,6 +130,9 @@ void Player::stopInfo() {
   netserver.requestOnChange(MODE, 0);
 }
 
+
+
+
 void Player::setError(){
   _hasError=true;
   config.setTitle(config.tmpBuf);
@@ -188,20 +193,43 @@ void Player::loop() {
   playerRequestParams_t requestP;
   if(xQueueReceive(playerQueue, &requestP, isRunning()?PL_QUEUE_TICKS:PL_QUEUE_TICKS_ST)){
     switch (requestP.type){
-      case PR_STOP: _stop(); break;
+      //case PR_STOP: _stop(); break;
+		case PR_STOP: {
+      // Этап 8, шаг 2: в BT-режиме PR_STOP глушит BT-источник, а не плеер
+      if (audioroute::source() == audioroute::AudioSource::BT) { btsource::stop(); break; }
+      _stop(); break;
+    }
+
+
       case PR_PLAY: {
         if (requestP.payload>0) {
           config.setLastStation((uint16_t)requestP.payload);
         }
+
+ 			// Этап 8, шаг 2: выбор станции в BT-режиме = возврат к радио
+        if (audioroute::source() == audioroute::AudioSource::BT) {
+          audioroute::setSource(audioroute::AudioSource::RADIO);
+          break;
+        }
+
+
         _play((uint16_t)abs(requestP.payload)); 
         if (player_on_station_change) player_on_station_change(); 
         pm.on_station_change();
         break;
       }
-      case PR_TOGGLE: {
+      /*
+			case PR_TOGGLE: {
         toggle();
         break;
       }
+			*/
+			case PR_TOGGLE: {
+        if (audioroute::source() == audioroute::AudioSource::BT) { btsource::toggle(); break; }
+        toggle();
+        break;
+      }
+
       case PR_VOL: {
         config.setVolume(requestP.payload);
         Audio::setVolume(volToI2S(requestP.payload));

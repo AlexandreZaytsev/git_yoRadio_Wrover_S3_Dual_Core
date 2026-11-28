@@ -66,6 +66,12 @@ class Player: public Audio {
     void setVol(uint8_t volume);
     uint8_t volToI2S(uint8_t volume);
     void stopInfo();
+
+
+    // этап 8, шаг 2: проброс приватных методов Audio для BT-источника
+    bool btPlaySample(int16_t sample[2]) { return Audio::playSample(sample); }
+    void btSetSampleRate(uint32_t hz)    { Audio::setSampleRate(hz); }
+
     void setOutputPins(bool isPlaying);
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
 };
