@@ -15,6 +15,7 @@
 #include "sdmanager.h"
 
 #include "network.h"
+#include "btsource.h"
 
 namespace audioroute {
 
@@ -23,6 +24,7 @@ static AudioSink   s_sink   = AudioSink::LOCAL;
 
 /* ---------- (2) доступность источников/потребителей ---------- */
 
+/*
 static bool sdAvailable() {
 #if SDC_CS != 255
   return sdman.ready && sdman.cardPresent();
@@ -30,12 +32,34 @@ static bool sdAvailable() {
   return false;
 #endif
 }
+*/
+static bool sdAvailable() {
+#if SDC_CS != 255
+  if (sdman.ready) return sdman.cardPresent();
+  // SD ещё не монтировалась (на буте монтируется только в SD-режиме):
+  // первая проверка в цикле монтирует карту один раз — дальше она
+  // остаётся смонтированной и в цикле.
+  static bool tried = false;
+  if (tried) return false;
+  tried = true;
+  if (!sdman.start()) return false;
+  return sdman.cardPresent();
+#else
+  return false;
+#endif
+}
+
 
 static bool srcAllowed(AudioSource s) {
   switch (s) {
     case AudioSource::RADIO: return true;  // сеть решает сама: свои ошибки коннекта отработает плеер
     case AudioSource::SD:    return sdAvailable();
-    case AudioSource::BT:    return false; // dual core: этап 4
+		case AudioSource::BT:
+			#if defined(I2S_DIN) && I2S_DIN != 255
+      	return true;  // этап 8, шаг 2: BT-приём через кольцевой буфер (тест 04)
+			#else
+      	return false; // на этой сборке BT-приёма нет
+			#endif
   }
   return false;
 }
@@ -58,6 +82,16 @@ static void stopCurrent() {
 }
 
 static void startSource(AudioSource s) {
+
+  if (s == AudioSource::BT) {
+    // BT-источник не идёт через плеер: плеер уже заглушен (stopCurrent),
+    // btsource сам держит I2S-приём с Wrover и вывод через playSample.
+    btsource::start();
+    return;
+  }
+  // Переход от BT к радио/SD: BT-задачи глушим ДО старта нового источника
+	btsource::stop();
+
   int want = (s == AudioSource::SD) ? PM_SDCARD : PM_WEB;
   if (config.getMode() != want) {
     config.changeMode(want);
@@ -78,6 +112,10 @@ static void applyRouteNow() {
 /* ---------- публичный API ---------- */
 
 bool begin() {
+
+
+
+
   /* --- ТЕСТ: принудительный источник SD (убрать после отладки) --- */
   //s_source = AudioSource::SD;
 
@@ -88,6 +126,12 @@ bool begin() {
   if (k >= 0 && k <= (int)AudioSink::BT_A2DP) s_sink   = (AudioSink)k;
   if (!srcAllowed(s_source)) s_source = AudioSource::RADIO;
   if (!sinkAllowed(s_sink))  s_sink   = AudioSink::LOCAL;
+
+// Этап 8: после ребута BT-маршрут не автостартует (Wrover может быть
+  // выключен) — предсказуемый fallback на RADIO, BT включается вручную.
+  if (s_source == AudioSource::BT) s_source = AudioSource::RADIO;
+
+
 
  // Режим плеера выравниваем с источником, но НЕ запускаем
   // воспроизведение — его сделает smartstart или первое нажатие.

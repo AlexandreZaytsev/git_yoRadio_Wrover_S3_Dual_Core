@@ -186,10 +186,22 @@ void Config::changeMode(int newmode){
     #endif
     delay(50);
   }
+
+/*
   if(getMode()==PM_WEB) {
     if(network.status==SDREADY) ESP.restart();
     sdman.stop();
   }
+*/
+ if(getMode()==PM_WEB) {
+    if(network.status==SDREADY) ESP.restart();
+    // Этап 8: SD на выделенном SDIO — не демонтируем. Карта остаётся
+    // смонтированной (ready=true), не выпадает из цикла источников,
+    // и unmount с открытым аудиофайлом больше не вызывается.
+    // sdman.stop();
+  }
+
+
   if(!_bootDone) return;
   initPlaylistMode();
   if (pir) player.sendCommand({PR_PLAY, getMode()==PM_WEB?store.lastStation:store.lastSdStation});
@@ -278,7 +290,9 @@ void Config::initPlaylistMode(){
   uint16_t cs = playlistLength();
   #ifdef USE_SD
     if(getMode()==PM_SDCARD){
-      if(!sdman.start()){
+
+        //      if(!sdman.start()){
+      if(!(sdman.ready || sdman.start())){  
         store.play_mode=PM_WEB;
         Serial.println("SD Mount Failed");
         changeMode(PM_WEB);

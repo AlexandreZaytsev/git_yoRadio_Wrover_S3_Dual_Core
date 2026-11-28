@@ -7,6 +7,7 @@
 #include "network.h"
 #include "netserver.h"
 #include "../pluginsManager/pluginsManager.h"
+#include "audioroute.h"
 
 long encOldPosition  = 0;
 long enc2OldPosition  = 0;
@@ -259,7 +260,10 @@ void irLoop() {
     for(int target=0; target<17; target++){
       for(int j=0; j<3; j++){
         if(config.ircodes.irVals[target][j]==irResults.value){
-          if (network.status != CONNECTED && network.status!=SDREADY && target!=IR_AST) return;
+          
+            if (network.status != CONNECTED && network.status!=SDREADY && target!=IR_AST) return;
+     //   	if (network.status != CONNECTED && network.status!=SDREADY && target!=IR_AST && target!=IR_0) return;
+
           if(target!=IR_AST && display.mode()==LOST) return;
           if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
             display.putRequest(NEWMODE, PLAYER);
@@ -306,6 +310,18 @@ void irLoop() {
               }
             case IR_0: {
                 irNumber(0);
+/*
+                // Этап 8, шаг 2: «0» вне набора номера = переключение источника
+                if (display.mode() == NUMBERS) {
+                  irNumber(0);
+                } else {
+                  if (audioroute::nextSource()) {
+                    netserver.requestOnChange(MODE, 0);
+                    display.putRequest(NEWMODE, PLAYER);
+                  }
+                }
+*/
+
                 break;
               }
             case IR_1: {
@@ -548,12 +564,26 @@ void onBtnClick(int id) {
         }
         break;
       }
+
+/*			
     #ifdef USE_SD
     case EVT_BTNMODE: {
       config.changeMode();
       break;
     }
     #endif
+*/
+
+case EVT_BTNMODE: {
+      // Этап 8, шаг 2: цикл источников RADIO -> SD -> BT.
+      // Сюда же приходят двойной клик кнопки энкодера и IR_AST с пульта.
+      if (audioroute::nextSource()) {
+        netserver.requestOnChange(MODE, 0);
+        display.putRequest(NEWMODE, PLAYER);
+      }
+      break;
+    }
+
     default: break;
   }
 }
