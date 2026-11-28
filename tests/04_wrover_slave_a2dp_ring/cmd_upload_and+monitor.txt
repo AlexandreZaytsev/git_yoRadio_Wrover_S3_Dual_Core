@@ -1,0 +1,2 @@
+cd D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\04_wrover_slave_a2dp_ring
+pio run -t upload -t monitor
