@@ -25,9 +25,12 @@ void setup() {
   cfg.intr_alloc_flags     = ESP_INTR_FLAG_LEVEL1;
   cfg.dma_buf_count        = 16;
   cfg.dma_buf_len          = 128;
-  cfg.use_apll             = false;
+
+  cfg.use_apll             = true;    // ← было false: точный аудио-клок от APLL
+  cfg.mclk_multiple        = I2S_MCLK_MULTIPLE_256;  // MCLK = 256 * fs ровно
+  cfg.fixed_mclk           = 0;       // оставить 0 — драйвер сам возьмёт точный делитель APLL
+
   cfg.tx_desc_auto_clear   = true;
-  cfg.fixed_mclk           = 0;
 
   if (i2s_driver_install(I2S_PORT, &cfg, 0, NULL) != ESP_OK) {
     Serial.println("[FULLDUP] driver_install FAILED");

@@ -1,0 +1,8 @@
+pio run -d tests\01_i2s_duplex\s3_master_duplex_tone -t upload -t monitor
+
+
+смотрим пару
+com3
+pio run -d D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\01_i2s_duplex\s3_master_duplex_tone -t upload -t monitor
+com4
+pio device monitor -d D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\04_wrover_slave_a2dp_ring
