@@ -1,0 +1,23 @@
+Что смотреть: [A2DP] started → подключаете телефон → [STATE] CONNECTED → в логе появится поток сэмплов, а в колонке (DIN ЦАПа на S3 47) — музыка с телефона. Параллельно на другом мониторе S3 покажет L/R-статистику на реальном BT-потоке — это первый живой прогон большого кольца.
+
+
+Сторона Wrover (BT-приёмник → TX):
+text
+tests\03_wrover_a2dp_sink\src\main.cpp
+Сторона S3 (мастер RX → ЦАП):
+text
+tests\01_i2s_duplex\duplex_tone\src\main.cpp
+
+
+
+cd D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\03_wrover_a2dp_sink
+pio run -t upload -t monitor
+
+чистпя перезаливка
+cd D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\03_wrover_a2dp_sink
+pio run -t erase
+pio run -t upload
+pio device monitor --port COM4 --baud 115200
+
+cd D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core
+pio device monitor --port COM3 --baud 115200
