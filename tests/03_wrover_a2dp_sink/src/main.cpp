@@ -56,17 +56,3 @@ void setup() {
 }
 
 void loop() {}
-/*
-// в loop():
-void loop() {
-  static int16_t buf[256 * 2];
-  static float ph = 0;
-  for (int i = 0; i < 256; i++) {
-    int16_t s = (int16_t)(sinf(ph) * 8000.0f);
-    ph += 2.0f * M_PI * 440.0f / 44100.0f;
-    buf[2 * i] = s; buf[2 * i + 1] = s;
-  }
-  size_t w = 0;
-  i2s_write(I2S_PORT, buf, sizeof(buf), &w, portMAX_DELAY);
-}
-  */
