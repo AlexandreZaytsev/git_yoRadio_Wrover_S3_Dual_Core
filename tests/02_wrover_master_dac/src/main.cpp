@@ -2,7 +2,13 @@
 #include "ESP_I2S.h"
 #include "options_slave_wrover.h"   // пины 1:1 из основного проекта
 
-// Wrover как мастер: BCLK=26, LRC=25, DOUT=23 -> ЦАП
+/* 
+Wrover как мастер 3 провода: 
+ DAC pin BCLK <> Wrover pin 26
+ DAC pin LCK/LCR <> Wrover pin 25
+ DAC pin DIN <> Wrover pin 23
+*/
+
 I2SClass i2s;
 
 const uint32_t SAMPLE_RATE = 44100;

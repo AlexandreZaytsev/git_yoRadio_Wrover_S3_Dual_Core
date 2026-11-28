@@ -10,16 +10,18 @@ S3 ведуший тактирует и переключает канал I2S с
 Данные передвет Wrower на S3 и S3 на ЦАП   
 
 S3 как I2S Master-RX
- S3 pin 38 -> Wrover pi 26 (линия BCLK) + DAC pin BCLK  
- S3 pin 39 -> Wrover pi 25 (линия LCK/LCR) + DAC pin LCK/LCR
- S3 pin 47 -> DAC pin DIN
+ S3 pin 38 -> Wrover pin 26 (линия BCLK) + DAC pin BCLK  
+ S3 pin 39 -> Wrover pin 25 (линия LCK/LCR) + DAC pin LCK/LCR
+ S3 pin 45 -> DAC pin DIN
 
 Wrover как I2S Slave-TX 
- Wrover 23 -> S3 pin 8 (RX)
+ Wrover 23 -> S3 pin 47 (RX)
 */
 
 Шаг 1. Заливка S3-мастера (duplex_tone)
 powershell
+
+
 
 cd D:\myProjects\Progect_esp32\WiFiRadio\youradio\git_yoRadio_Dual_Core\tests\01_i2s_duplex\duplex_tone
 pio run -t upload -t monitor
